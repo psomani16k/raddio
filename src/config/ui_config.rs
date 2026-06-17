@@ -15,6 +15,9 @@ pub struct UiConfig {
     /// Decorative, non-editable prefix shown at the start of the input box.
     pub prefix: Option<String>,
     pub prefix_color: Option<String>,
+    /// When true, the input box accepts multiple lines (Ctrl+Enter inserts a
+    /// newline). Independent of the box size; content scrolls within it.
+    pub multiline: Option<bool>,
 }
 
 impl UiConfig {
@@ -41,6 +44,9 @@ impl UiConfig {
         if ui_config.prefix_color.is_some() {
             result.prefix_color = ui_config.prefix_color.clone();
         }
+        if ui_config.multiline.is_some() {
+            result.multiline = ui_config.multiline;
+        }
         result
     }
 }
@@ -55,6 +61,7 @@ impl Default for UiConfig {
             border_color: Some(String::from("#ffffff")),
             prefix: Some(String::from(" \u{f044} ")),
             prefix_color: Some(String::from("#ffffff")),
+            multiline: Some(false),
         }
     }
 }

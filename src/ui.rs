@@ -2,7 +2,7 @@ use anyhow::Ok;
 use crossterm::event::{self, Event, KeyCode, KeyEventKind, KeyModifiers};
 use edtui::{
     EditorEventHandler, EditorMode, EditorState, EditorTheme, EditorView, Lines,
-    actions::{MoveBackward, MoveForward},
+    actions::{LineBreak, MoveBackward, MoveDown, MoveForward, MoveUp},
 };
 use ratatui::{
     Terminal,
@@ -22,12 +22,13 @@ pub struct App {
     submitted: Option<String>,
     station: &'static Station,
     ui_conf: UiConfig,
+    multiline: bool,
 }
 
-fn new_editor() -> EditorState {
+fn new_editor(multiline: bool) -> EditorState {
     let mut editor = EditorState::new(Lines::from(""));
     editor.mode = EditorMode::Insert;
-    editor.set_single_line(true);
+    editor.set_single_line(!multiline);
     editor
 }
 
@@ -38,12 +39,14 @@ impl App {
             Some(conf) => ui_conf.override_with(conf),
             None => ui_conf,
         };
+        let multiline = ui_conf.multiline.unwrap_or(false);
         return Self {
-            editor: new_editor(),
+            editor: new_editor(multiline),
             event_handler: EditorEventHandler::emacs_mode(),
             submitted: None,
             station,
             ui_conf,
+            multiline,
         };
     }
 
@@ -62,6 +65,9 @@ impl App {
                         KeyCode::Char('c') => break,
                         KeyCode::Char('h') => self.editor.execute(MoveBackward(1)),
                         KeyCode::Char('l') => self.editor.execute(MoveForward(1)),
+                        KeyCode::Enter if self.multiline => self.editor.execute(LineBreak(1)),
+                        KeyCode::Char('j') if self.multiline => self.editor.execute(MoveDown(1)),
+                        KeyCode::Char('k') if self.multiline => self.editor.execute(MoveUp(1)),
                         _ => self.event_handler.on_key_event(key, &mut self.editor),
                     }
                 } else {
@@ -71,7 +77,7 @@ impl App {
                             let text = self
                                 .editor
                                 .lines
-                                .flatten(&None)
+                                .flatten(&Some('\n'))
                                 .into_iter()
                                 .collect::<String>();
                             self.submitted = Some(text);
@@ -162,7 +168,7 @@ impl App {
 
             EditorView::new(&mut self.editor)
                 .theme(theme)
-                .single_line(true)
+                .single_line(!self.multiline)
                 .wrap(false)
                 .render(editor_area, frame.buffer_mut());
 

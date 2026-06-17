@@ -12,20 +12,40 @@ pub static CONFIG: LazyLock<Config> = LazyLock::new(|| {
     let path = config_path();
     if !path.exists() {
         let default = Config::default();
-        // Written as pretty JSON, which is valid JSON5; users can then edit it
-        // with comments, trailing commas, and unquoted keys.
-        let content = serde_json::to_string_pretty(&default)
-            .unwrap_or_else(|e| panic!("failed to serialize default config: {}", e));
-        std::fs::create_dir_all(path.parent().unwrap())
-            .unwrap_or_else(|e| panic!("failed to create config dir: {}", e));
-        std::fs::write(&path, content)
-            .unwrap_or_else(|e| panic!("failed to write default config to {}: {}", path.display(), e));
+        write_config(&path, &default)
+            .unwrap_or_else(|e| panic!("failed to write default config: {}", e));
         return default;
     }
     let content = std::fs::read_to_string(&path)
         .unwrap_or_else(|e| panic!("failed to read config at {}: {}", path.display(), e));
     json5::from_str(&content).unwrap_or_else(|e| panic!("failed to parse config: {}", e))
 });
+
+/// Writes the given config to `path`, creating parent directories as needed.
+/// Serialized as pretty JSON (valid JSON5), so it can then be hand-edited with
+/// comments, trailing commas, and unquoted keys.
+fn write_config(path: &PathBuf, config: &Config) -> anyhow::Result<()> {
+    let content = serde_json::to_string_pretty(config)?;
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    std::fs::write(path, content)?;
+    Ok(())
+}
+
+/// Handles `raddio init`: writes a default config, refusing to overwrite an
+/// existing one. Does not read or parse `CONFIG`, so it works before any valid
+/// config exists.
+pub fn init() -> anyhow::Result<()> {
+    let path = config_path();
+    if path.exists() {
+        println!("config already exists at {}", path.display());
+        return Ok(());
+    }
+    write_config(&path, &Config::default())?;
+    println!("created default config at {}", path.display());
+    Ok(())
+}
 
 fn config_path() -> PathBuf {
     let config_dir = std::env::var("XDG_CONFIG_HOME")
@@ -34,5 +54,5 @@ fn config_path() -> PathBuf {
             let home = std::env::var("HOME").expect("HOME not set");
             PathBuf::from(home).join(".config")
         });
-    config_dir.join("raddio").join("config.json")
+    config_dir.join("raddio").join("config.json5")
 }
