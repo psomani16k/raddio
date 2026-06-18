@@ -98,11 +98,6 @@ impl App {
         let Some(input) = &self.submitted else {
             return Ok(());
         };
-        let input = if input.is_empty() {
-            self.station.default.as_deref().unwrap_or(input)
-        } else {
-            input
-        };
         self.station.execute(input)
     }
 

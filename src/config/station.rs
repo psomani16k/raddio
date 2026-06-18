@@ -8,7 +8,6 @@ pub struct Station {
     pub name: String,
     pub description: String,
     pub run: Vec<String>,
-    pub default: Option<String>,
     pub override_ui: Option<UiConfig>,
 }
 

@@ -31,7 +31,6 @@ impl Config {
             name: String::from("echo"),
             description: String::from("Echo"),
             run: vec![String::from("echo"), String::from("{}")],
-            default: Some(String::from("Hello World!")),
             override_ui: Some(UiConfig {
                 max_height: Some(10),
                 max_width: Some(70),
