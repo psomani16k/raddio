@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
 
-/// A tiny fuzzy-input launcher: pick a station, type input, run its command.
+/// A tiny terminal launcher: tune into a station, type some input, run its command.
 #[derive(Debug, Parser)]
 #[command(name = "raddio", version, about)]
 pub struct Args {
@@ -17,7 +17,7 @@ pub enum Command {
         /// Name of the station (must match a `name` in the config).
         station: String,
     },
-    /// List all stations form the config
+    /// List all stations from the config.
     List,
 }
 

@@ -45,7 +45,7 @@ A [Nerd Font](https://www.nerdfonts.com/) is recommended for the default prompt 
 raddio init
 
 # 2. Edit it (see Configuration below)
-$EDITOR ~/.config/raddio/config.json
+$EDITOR ~/.config/raddio/config.json5
 
 # 3. Launch a station
 raddio run "station name"
@@ -57,13 +57,14 @@ raddio run "station name"
 | ----------------------- | ------------------------------------------------------------------ |
 | `raddio init`           | Write a default config file. Will **not** overwrite an existing one. |
 | `raddio run <station>`  | Open the input box for `<station>` and run its command.            |
+| `raddio list`           | Print the name of every station in the config, one per line.       |
 | `raddio --help`         | Show help. `raddio <command> --help` for per-command help.         |
 | `raddio --version`      | Print the version.                                                 |
 
 ## Key bindings
 
 The input box is modeless — just start typing. It uses
-[edtui](https://crates.io/crates/edtui) in single-line mode, so most Emacs-style editing
+[edtui](https://crates.io/crates/edtui) in Emacs mode, so most Emacs-style editing
 keys work (e.g. `Ctrl+A`/`Ctrl+E`, `Ctrl+W`). Text scrolls horizontally when it overflows.
 
 | Key                    | Action                                              |
@@ -78,8 +79,8 @@ If you press `Enter` on an empty input, the station's `default` value (if set) i
 
 ### Multiline mode
 
-When a station sets `multiline: true` in its `UiConfig`, the input box accepts multiple
-lines:
+When `multiline` is enabled in the `UiConfig` (it is on by default), the input box accepts
+multiple lines:
 
 | Key                    | Action                                              |
 | ---------------------- | --------------------------------------------------- |
@@ -97,8 +98,8 @@ than the box (`max_height`) scrolls vertically.
 
 ## Configuration
 
-- **Location:** `$XDG_CONFIG_HOME/raddio/config.json` (falls back to
-  `~/.config/raddio/config.json`).
+- **Location:** `$XDG_CONFIG_HOME/raddio/config.json5` (falls back to
+  `~/.config/raddio/config.json5`).
 - **Format:** [JSON5](https://json5.org/) — regular JSON plus comments, trailing commas,
   and unquoted keys. `raddio init` writes plain pretty-printed JSON, which you can then
   enrich with JSON5 niceties.
@@ -112,11 +113,14 @@ than the box (`max_height`) scrolls vertically.
   ui: {
     max_height: 3,
     max_width: 40,
-    rounded_corners: true,
+    rounded_corners: false,
     border: true,
-    border_color: "#ffffff",
+    border_color: "#33FF33",
     prefix: " > ",          // you can use a Nerd Font icon, shown before the input (non-editable)
-    prefix_color: "#ffffff",
+    prefix_color: "#33FFFF",
+    multiline: true,
+    cursor_style: "Line",   // "Line" or "Block"
+    cursor_color: "#FFFFFF",
   },
 
   stations: [
@@ -155,12 +159,14 @@ rest fall back to the global `ui` block, then to these defaults.
 | ----------------- | ------- | ----------- | -------------------------------------------------------- |
 | `max_height`      | integer | `3`         | Max box height (including borders), centered.            |
 | `max_width`       | integer | `40`        | Max box width (including borders), centered.             |
-| `rounded_corners` | bool    | `true`      | Rounded vs. square border corners.                       |
+| `rounded_corners` | bool    | `false`     | Rounded vs. square border corners.                       |
 | `border`          | bool    | `true`      | Whether to draw a border at all.                         |
-| `border_color`    | string  | `"#ffffff"` | Hex color for the border.                                |
-| `prefix`          | string  | ` ` (icon) | Non-editable decoration shown before the input.          |
-| `prefix_color`    | string  | `"#ffffff"` | Hex color for the prefix (falls back to `border_color`). |
-| `multiline`       | bool    | `false`     | Allow multiple lines of input (see Key bindings below).  |
+| `border_color`    | string  | `"#33FF33"` | Hex color for the border.                                |
+| `prefix`          | string  | `"  "` (Nerd Font pencil icon) | Non-editable decoration shown before the input. |
+| `prefix_color`    | string  | `"#33FFFF"` | Hex color for the prefix.                                |
+| `multiline`       | bool    | `true`      | Allow multiple lines of input (see Key bindings below).  |
+| `cursor_style`    | string  | `"Line"`    | Cursor rendering: `"Line"` (dim) or `"Block"` (bold).    |
+| `cursor_color`    | string  | `"#FFFFFF"` | Hex color for the cursor.                                |
 
 ## zellij integration
 
