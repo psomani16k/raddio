@@ -42,7 +42,7 @@ pub fn init() -> anyhow::Result<()> {
         println!("config already exists at {}", path.display());
         return Ok(());
     }
-    write_config(&path, &Config::default())?;
+    write_config(&path, &Config::init_config())?;
     println!("created default config at {}", path.display());
     Ok(())
 }

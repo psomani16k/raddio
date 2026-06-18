@@ -39,7 +39,7 @@ impl App {
             Some(conf) => ui_conf.override_with(conf),
             None => ui_conf,
         };
-        let multiline = ui_conf.multiline.unwrap_or(false);
+        let multiline = ui_conf.multiline.expect("This should never happen");
         return Self {
             editor: new_editor(multiline),
             event_handler: EditorEventHandler::emacs_mode(),
@@ -111,28 +111,26 @@ impl App {
         B::Error: Send + Sync + 'static,
     {
         let ui = &self.ui_conf;
-        let border_type = if ui.rounded_corners.unwrap_or(false) {
-            BorderType::Rounded
-        } else {
-            BorderType::Plain
+        let border_type = match ui.rounded_corners.expect("This should never be empty") {
+            true => BorderType::Rounded,
+            false => BorderType::Plain,
         };
-        let borders = if ui.border.unwrap_or(true) {
-            Borders::ALL
-        } else {
-            Borders::NONE
+        let borders = match ui.border.expect("This should never be empty") {
+            true => Borders::ALL,
+            false => Borders::NONE,
         };
         let border_color = ui
             .border_color
             .as_deref()
             .map(parse_hex_color)
-            .unwrap_or(Color::White);
-        let icon = ui.prefix.as_deref().unwrap_or("");
+            .expect("This should never be empty");
+        let icon = ui.prefix.as_deref().expect("This should never be empty");
         let icon_width = icon.width() as u16;
         let icon_color = ui
             .prefix_color
             .as_deref()
             .map(parse_hex_color)
-            .unwrap_or(border_color);
+            .expect("This should never be empty");
 
         term.draw(|frame| {
             let area = constrained_centered(
