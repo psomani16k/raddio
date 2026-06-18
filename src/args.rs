@@ -17,6 +17,8 @@ pub enum Command {
         /// Name of the station (must match a `name` in the config).
         station: String,
     },
+    /// List all stations form the config
+    List,
 }
 
 impl Args {

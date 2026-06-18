@@ -19,7 +19,7 @@ impl Station {
             .iter()
             .map(|s| if s == "{}" { input } else { s.as_str() })
             .collect();
-        std::process::Command::new(&args[0])
+        std::process::Command::new(args[0])
             .args(&args[1..])
             .status()?;
         Ok(())

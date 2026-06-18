@@ -14,7 +14,7 @@ use ratatui::{
 
 use unicode_width::UnicodeWidthStr;
 
-use crate::config::{CONFIG, Station, UiConfig};
+use crate::config::{CONFIG, Station, UiConfig, parse_hex_color};
 
 pub struct App {
     editor: EditorState,
@@ -40,14 +40,14 @@ impl App {
             None => ui_conf,
         };
         let multiline = ui_conf.multiline.expect("This should never happen");
-        return Self {
+        Self {
             editor: new_editor(multiline),
             event_handler: EditorEventHandler::emacs_mode(),
             submitted: None,
             station,
             ui_conf,
             multiline,
-        };
+        }
     }
 
     pub fn run<B: Backend>(&mut self, term: &mut Terminal<B>) -> anyhow::Result<()>
@@ -88,7 +88,7 @@ impl App {
                 }
             }
         }
-        return Ok(());
+        Ok(())
     }
 
     /// Runs the station command for the submitted input, if any. Call this
@@ -161,6 +161,7 @@ impl App {
 
             let theme = EditorTheme::default()
                 .block(Block::default())
+                .cursor_style(self.ui_conf.get_cursor_style())
                 .base(Style::default().fg(Color::White))
                 .hide_status_line();
 
@@ -174,7 +175,7 @@ impl App {
                 frame.set_cursor_position(pos);
             }
         })?;
-        return Ok(());
+        Ok(())
     }
 }
 
@@ -187,12 +188,4 @@ fn constrained_centered(max_width: u16, max_height: u16, area: Rect) -> Rect {
         width,
         height,
     }
-}
-
-fn parse_hex_color(hex: &str) -> Color {
-    let hex = hex.trim_start_matches('#');
-    let r = u8::from_str_radix(&hex[0..2], 16).unwrap_or(255);
-    let g = u8::from_str_radix(&hex[2..4], 16).unwrap_or(255);
-    let b = u8::from_str_radix(&hex[4..6], 16).unwrap_or(255);
-    Color::Rgb(r, g, b)
 }

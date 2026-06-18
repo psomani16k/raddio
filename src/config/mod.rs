@@ -1,58 +1,67 @@
-mod config;
+use serde::{Deserialize, Serialize};
+
 mod station;
 mod ui_config;
+mod utils;
 
-pub use config::Config;
 pub use station::Station;
 pub use ui_config::UiConfig;
+pub use utils::{CONFIG, init, parse_hex_color};
 
-use std::{path::PathBuf, sync::LazyLock};
+use crate::config::ui_config::CursorStyle;
 
-pub static CONFIG: LazyLock<Config> = LazyLock::new(|| {
-    let path = config_path();
-    if !path.exists() {
-        let default = Config::default();
-        write_config(&path, &default)
-            .unwrap_or_else(|e| panic!("failed to write default config: {}", e));
-        return default;
-    }
-    let content = std::fs::read_to_string(&path)
-        .unwrap_or_else(|e| panic!("failed to read config at {}: {}", path.display(), e));
-    json5::from_str(&content).unwrap_or_else(|e| panic!("failed to parse config: {}", e))
-});
-
-/// Writes the given config to `path`, creating parent directories as needed.
-/// Serialized as pretty JSON (valid JSON5), so it can then be hand-edited with
-/// comments, trailing commas, and unquoted keys.
-fn write_config(path: &PathBuf, config: &Config) -> anyhow::Result<()> {
-    let content = serde_json::to_string_pretty(config)?;
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent)?;
-    }
-    std::fs::write(path, content)?;
-    Ok(())
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct Config {
+    pub stations: Vec<Station>,
+    pub ui: Option<UiConfig>,
 }
 
-/// Handles `raddio init`: writes a default config, refusing to overwrite an
-/// existing one. Does not read or parse `CONFIG`, so it works before any valid
-/// config exists.
-pub fn init() -> anyhow::Result<()> {
-    let path = config_path();
-    if path.exists() {
-        println!("config already exists at {}", path.display());
-        return Ok(());
+impl Config {
+    pub fn get_ui(&self) -> UiConfig {
+        match &self.ui {
+            Some(ui) => ui.clone().override_with(&UiConfig::default()),
+            None => UiConfig::default(),
+        }
     }
-    write_config(&path, &Config::init_config())?;
-    println!("created default config at {}", path.display());
-    Ok(())
-}
 
-fn config_path() -> PathBuf {
-    let config_dir = std::env::var("XDG_CONFIG_HOME")
-        .map(PathBuf::from)
-        .unwrap_or_else(|_| {
-            let home = std::env::var("HOME").expect("HOME not set");
-            PathBuf::from(home).join(".config")
+    pub fn init_config() -> Self {
+        let mut conf = Self::default();
+        conf.stations.push(Station {
+            name: String::from("echo"),
+            description: String::from("Echo"),
+            run: vec![String::from("echo"), String::from("{}")],
+            default: Some(String::from("Hello World!")),
+            override_ui: Some(UiConfig {
+                max_height: Some(10),
+                max_width: Some(70),
+                rounded_corners: Some(true),
+                border: Some(true),
+                border_color: Some(String::from("#0000FF")),
+                prefix: Some(String::from(" => ")),
+                prefix_color: Some(String::from("#00FF00")),
+                multiline: Some(true),
+                cursor_style: Some(CursorStyle::Block),
+                cursor_color: Some(String::from("#FFFFFF")),
+            }),
         });
-    config_dir.join("raddio").join("config.json5")
+        conf
+    }
+
+    pub fn list_station_by_names(&self) -> Vec<&str> {
+        let mut result: Vec<&str> = vec![];
+        self.stations.iter().for_each(|s| {
+            result.push(&s.name);
+        });
+        result
+    }
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            stations: vec![],
+            ui: Some(UiConfig::default()),
+        }
+    }
 }

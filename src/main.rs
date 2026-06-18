@@ -3,9 +3,7 @@ mod config;
 mod ui;
 
 use crossterm::{
-    event::{
-        KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags,
-    },
+    event::{KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags},
     execute,
     terminal::{
         EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode,
@@ -25,6 +23,13 @@ fn main() -> anyhow::Result<()> {
     match args.command {
         Command::Init => config::init(),
         Command::Run { station } => tune(&station),
+        Command::List => {
+            let stations = CONFIG.list_station_by_names();
+            for station in stations {
+                println!("{}", station);
+            }
+            Ok(())
+        }
     }
 }
 
