@@ -20,7 +20,7 @@ pub struct Config {
 impl Config {
     pub fn get_ui(&self) -> UiConfig {
         match &self.ui {
-            Some(ui) => ui.clone().override_with(&UiConfig::default()),
+            Some(ui) => UiConfig::default().override_with(&ui),
             None => UiConfig::default(),
         }
     }
